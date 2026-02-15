@@ -1,0 +1,84 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+% Additional Packages
+\usepackage[english]{babel}
+\usepackage{cvpr} % cvpr.sty has been taken from https://github.com/cvpr-org/author-kit/blob/main/cvpr.sty
+\usepackage[skip=5pt]{parskip}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{listings}
+\usepackage{minted}
+\usepackage{xcolor}
+\usepackage[many]{tcolorbox}
+
+% Set up Minted
+\setminted{
+    fontsize=\small,
+    style=staroffice,
+    linenos=true,
+    tabsize=4,
+    breaklines=true,
+    breakanywhere=true
+}
+
+% Define a custom tcolorbox style for code
+\definecolor{codeboxbg}{HTML}{f8f8f8}
+\newtcolorbox{codebox}{
+    colback=codeboxbg,  % Background color
+    colframe=black,     % Border color
+    boxrule=0.25mm,     % Border thickness
+    arc=4mm,            % Rounded corners
+    top=4mm,            % Top padding
+    bottom=4mm,         % Bottom padding
+    left=10mm,          % Left padding
+    right=4mm,          % Right padding
+    breakable,          % Make it breakable
+    enhanced            % Use the enhanced version
+}
+
+% Metadata
+\title{From Real to Synthetic: A Pipeline for Fake Image Detection and Model Identification}
+
+\author{
+    Cocca Flavia\\
+    \small Università degli Studi di Modena e Reggio Emilia\\
+    {\tt\small 253218@studenti.unimore.it}
+\and
+    Cosimi Tommaso\\
+    \small Università degli Studi di Modena e Reggio Emilia\\
+    {\tt\small 338969@studenti.unimore.it}
+\and
+    De Bellis Elena Maria\\
+    \small Università degli Studi di Modena e Reggio Emilia\\
+    {\tt\small 256249@studenti.unimore.it}
+}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\vspace{5mm}
+
+\input{sections/abstract.tex}
+\input{sections/sec01.tex}
+\input{sections/sec02.tex}
+\input{sections/sec03.tex}
+\input{sections/sec04.tex}
+\input{sections/sec05.tex}
+\input{sections/sec06.tex}
+\input{sections/sec07.tex}
+\appendix
+\input{sections/sec08.tex}
+
+{
+    \small
+    \bibliographystyle{unsrt}
+    \bibliography{bibliography}
+}
+
+\end{document}

@@ -1,0 +1,87 @@
+\section{Model}\label{sec:Model}
+The proposed architecture takes inspiration from ResNet \cite{he2015deepresiduallearningimage}, its variants and the Inception Block from GoogleNet\cite{szegedy2014goingdeeperconvolutions}. It's a fully custom solution trained from scratch.
+The Model is composed by a combination of the following building blocks.
+\subsection{Channel Expansion Layers}
+The network begins with a $3 \times 3$ convolution that expands the feature space to 16 channels, this is then followed by an initial residual block to expand the channels to 64. \par
+In \autoref{Fig:ModelChannelExpansion} a visualization of the aforementioned initial layers.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.25\textwidth]{./assets/Model_Architecture/ChannelExpansion.pdf}
+    \caption{Initial layers of the architecture}
+    \label{Fig:ModelChannelExpansion}
+\end{figure}
+\subsection{Operational Blocks}
+The core of the network consists of four instances of the Operational Block, each implementing a parallel multi-branch convolutional architecture combined with residual connections. Each block contains:
+\begin{itemize}
+    \item \textbf{Branch 1} \par
+    A sequence of four $3 \times 3$ convolutions
+    \item \textbf{Branch 2} \par
+    A sequence of two $3 \times 3$ convolutions with a dilation factor of $2$
+\end{itemize}
+The outputs of the branches are concatenated along the channel dimension and summed to a residual connection. \par
+This design enables the network to capture both fine-grained and more coarse spectral patterns. Each block is followed by max-pooling to progressively reduce spatial resolution and increase receptive field size. \par
+In \autoref{Fig:ModelBlock} a visualization of an example of the operational block.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.45\textwidth]{./assets/Model_Architecture/Block.pdf}
+    \caption{Example of a functional Operational Block}
+    \label{Fig:ModelBlock}
+\end{figure}
+In the overall model structure it is possible to find a sequence of the above blocks alternating with MaxPooling layers, which halve the spatial resolution as shown in \autoref{Fig:ModelBlockSequence}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.125\textwidth]{./assets/Model_Architecture/BlockSequence.pdf}
+    \caption{Sequence of Operational Blocks}
+    \label{Fig:ModelBlockSequence}
+\end{figure}
+\subsection{Channel Compression Layers}
+Before proceding with the Global Pooling Layers a residual block, consisting of a series of three $3 \times 3$ convolutions that keeps intact the number of channels, is implemented. This is then followed by three convolutional layers which actuate the channel compression from $1024$ to $512$ to $256$ to a final number of channels of $128$. \par
+In \autoref{Fig:ModelChannelCompression} a visualization of these layers.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.25\textwidth]{./assets/Model_Architecture/ChannelCompression.pdf}
+    \caption{Last layers of the architecture before the Global Pooling Pyramids}
+    \label{Fig:ModelChannelCompression}
+\end{figure}
+\subsection{Global Pooling Pyramids}
+Taking inspiration from Zhao et al.\cite{zhao2017pyramidsceneparsingnetwork}, to be able to capture spectral characteristics at multiple scales, the Global Average Pooling (GAP) and the Global Max Pooling (GMP) operators are ran at different kernel sizes:
+\begin{itemize}
+    \item $1 \times 1$ Global Pooling \par
+    Sums up each $8 \times 8$ feature map in one value (either the average or the highest one).
+    \item $2 \times 2$ Global Pooling \par
+    Sums up each $8 \times 8$ feature map in one value for each quadrant (either the average or the highest one).
+    \item $4 \times 4$ Global Pooling \par
+    Sums up each $8 \times 8$ feature map in one value for each quarter of every quadrant (either the average or the highest one).
+\end{itemize}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.45\textwidth]{./assets/Model_Architecture/GlobalPoolingPyramids.pdf}
+    \caption{Global Pooling Pyramids in Model Architecture}
+    \label{Fig:ModelGlobalPoolingPyramids}
+\end{figure}
+These feature maps are then flattened in order to be concatenated and sent as an input to the respective Global Pooling Pyramid MLP (Multi-Layer Perceptron) shown in \autoref{Fig:ModelGlobalPoolingPyramid}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.20\textwidth]{./assets/Model_Architecture/GlobalPoolingPyramid.pdf}
+    \caption{Global Pooling Pyramid MLP Architecture}
+    \label{Fig:ModelGlobalPoolingPyramid}
+\end{figure}
+The results coming from the Global Pooling Pyramid MLPs are concatenated to be passed as input to the final classifier.
+\subsection{Classifier}
+After the above block, a final MLP with three cascading linear layers along with their respective GELU activation function is added. It gradually compresses the feature vector from a length of $512$ elements to $5$ (the number of classes: real image and the four generative sources). \par
+Dropout with a variable probability $p$ is applied between Linear layers to prevent overfitting. \par
+In \autoref{Fig:ModelClassifier} the described MLP is depicted.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.20\textwidth]{./assets/Model_Architecture/Classifier.pdf}
+    \caption{MLP for final classifier}
+    \label{Fig:ModelClassifier}
+\end{figure}
+\subsection{Overall Model Architecture}
+The final custom architecture is represented in \autoref{Fig:OverallModel}, and is a composition of the various building blocks described above.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.45\textwidth]{./assets/Model_Architecture/Modello.pdf}
+    \caption{Overall Model architecture}
+    \label{Fig:OverallModel}
+\end{figure}

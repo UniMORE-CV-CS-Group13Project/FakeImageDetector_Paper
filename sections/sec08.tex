@@ -1,0 +1,166 @@
+\section{Note on Denoising Images} \label{App:Denoising}
+During our experment phase another preprocessing technique was also applied in the form of image denoising. \par
+The denoising process has been achieved using OpenCV as follows; right before moving to the frequency domain:
+\begin{codebox}
+    \begin{minted}{python3}
+denoised_img = cv2.fastNlMeansDenoising(
+    src=resized_greyscale_img,
+    dst=None,
+    h=3.0,
+    templateWindowSize=7,
+    searchWindowSize=21
+)
+    \end{minted}
+\end{codebox}
+This approach should preserve most of the high-frequency noise characteristics typical of image generators. \par
+Below are the results coming from a complete re-training of the same network with the denoised image dataset. \par
+As shown in the following plots it is noticeable that the class of the Generator 0 is the only one that could benefit from the denoising process. This is probably due to examples coming from the Generator 0 being particularly noisy, and the denoising process helping in isolating significant patterns better. \par
+Other classes either get marginal differences or - as is the case for the class of the Generator 2 - a more significant penalty, with the latter loosing in the F1-Score metric from the denoising process, probably due to wiping important information through the additional preprocessing step. \par
+All of these observations could still be in the margin of error since their magnitude is in the $0.001\% - 0.01\%$ range.
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/loss.pdf}
+        \caption{Loss performances over epochs}
+        \label{Fig:Loss-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/acc.pdf}
+        \caption{Accuracy performances over epochs}
+        \label{Fig:Acc-denoise}
+    \end{subfigure}
+    \caption{General metrics performances}
+    \label{Fig:GeneralResults-denoise}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/micro.pdf}
+        \caption{Micro performances over epochs}
+        \label{Fig:Micro-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/macro.pdf}
+        \caption{Macro performances over epochs}
+        \label{Fig:Macro-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/weighted.pdf}
+        \caption{Weighted performances over epochs}
+        \label{Fig:Weighted-denoise}
+    \end{subfigure}
+    \caption{Weighted general metrics performances}
+    \label{Fig:WeightedResults-denoise}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/class_0.pdf}
+        \caption{Class ``Generator 0'' performances over epochs}
+        \label{Fig:Class0-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/cm_0.pdf}
+        \caption{Class ``Generator 0'' confusion matrices over epochs}
+        \label{Fig:Class0cm-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/class_1.pdf}
+        \caption{Class ``Generator 1'' performances over epochs}
+        \label{Fig:Class1-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/cm_1.pdf}
+        \caption{Class ``Generator 1'' confusion matrices over epochs}
+        \label{Fig:Class1cm-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/class_2.pdf}
+        \caption{Class ``Generator 2'' performances over epochs}
+        \label{Fig:Class2-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/cm_2.pdf}
+        \caption{Class ``Generator 2'' confusion matrices over epochs}
+        \label{Fig:Class2cm-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/class_3.pdf}
+        \caption{Class ``Generator 3'' performances over epochs}
+        \label{Fig:Class3-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/cm_3.pdf}
+        \caption{Class ``Generator 3'' confusion matrices over epochs}
+        \label{Fig:Class3cm-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/class_4.pdf}
+        \caption{Class ``Real Image'' performances over epochs}
+        \label{Fig:Class4-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/cm_4.pdf}
+        \caption{Class ``Real Image'' confusion matrices over epochs}
+        \label{Fig:Class4cm-denoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/denoise/grouped/cm_test.pdf}
+        \caption{Confusion matrices in the Test phase}
+        \label{Fig:Testcm-denoise}
+    \end{subfigure}
+    \caption{Per-class metrics performances}
+    \label{Fig:PerClassResults-denoise}
+\end{figure}

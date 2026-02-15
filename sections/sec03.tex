@@ -1,0 +1,20 @@
+\section{Data}\label{sec:Data}
+The dataset used as a base in this project is ELSA\textunderscore D3\cite{baraldi2024contrastingdeepfakesdiffusioncontrastive, ELSAD3}. It is a multimodal dataset designed for deep fake detection. Among other information, the data structure provides, for each example, a URL pointing to a real image along with a description of such image, which is then used as a prompt to generate four synthetic variants:
+\begin{itemize}
+    \item \texttt{image\textunderscore gen0} $\rightarrow$ DeepFloyd/IF-II-L-v1.0;
+    \item \texttt{image\textunderscore gen1} $\rightarrow$ CompVis/stable-diffusion-v1-4;
+    \item \texttt{image\textunderscore gen2} $\rightarrow$ stabilityai/stable-diffusion-2-1-base;
+    \item \texttt{image\textunderscore gen3} $\rightarrow$ stabilityai/stable-diffusion-xl-base-1.0.
+\end{itemize}
+This organization proves to be particularly suitable for our setting, since it supports at the same time both the division between real and generated images and the multi-class source attribution.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.45\textwidth]{./assets/dataset_example_row.pdf}
+    \caption{Handpicked example of interesting data from one row of the ELSA\textunderscore D3 Dataset}
+\end{figure}
+
+\subsection{Data Acquisition and Management}
+Given the possibly large dimension of the dataset, we implemented a script that streams dataset chunks, downloading real images through HTTP requests using the provided URL, and retrieving generated ones directly from the dataset chunk itself. \par
+During this acquisition phase, a validity check is performed on URLs and content types to ensure that only valid images are processed, discarding any corrupted or unreachable links, and the related generated images. \par
+To optimize memory usage and enable scalable storage, all images are converted to raw bytes and written progressively in Parquet chunks. \par
+In our configuration, the acquisition process collects a total of $16.384$ dataset entries, each containing five images (one per class), making our custom dataset of $81.920$ images perfectly balanced.

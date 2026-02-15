@@ -1,0 +1,38 @@
+\section{Preprocessing}\label{sec:Preprocessing}
+The preprocessing phase is focused on frequency analysis. \par
+Every image is initially converted to greyscale, and then resized to a fixed resolution of $256 \times 256$ pixels, to ensure consistency across the dataset. \par
+Subsequently, a 2D Discrete Fourier Transform is applied to the image to switch from the spatial domain to the frequency domain. From the resulting Fourier transform, we derive a four-channel spectral representation of the original image, which constitutes the input to the neural network. \par
+Each channel has the spatial resolution $256 \times 256$, resulting in a tensor of shape $4 \times 256 \times 256$. \par
+Given the definition of the 2D Discrete Fourier Transform adapted to our $256 \times 256$ greyscale input:
+\begin{multline}
+    \text{DFT}(I) = \sum_{x=0}^{255}\sum_{y=0}^{255} I(x,y) e^{-j2\pi\left(\frac{ux}{256}\frac{vy}{256}\right)} \\
+    = \Re  + j \Im 
+\end{multline}
+Where:
+\begin{itemize}
+    \item $I$ is the image;
+    \item $u \in [0, 255]$ are the horizontal frequency indices;
+    \item $v \in [0, 255]$ are the vertical frequency indices.
+\end{itemize}
+Then the channels are defined as follows:
+\begin{enumerate}
+    \item \textbf{Magnitude Spectrum} \par
+    We use the Log Magnitude, which is computed as:
+    $$\text{Magnitude} = 20 \times \log_{10}(\sqrt{\Re^{2} + \Im^{2}})$$
+    \item \textbf{Phase Spectrum (sine)} \par
+    To avoid losing directional and structural information, computed as:
+    $$\text{Sine Phase Spectrum} = \sin\left(\arctan\left(\frac{\Im}{\Re}\right)\right)$$
+    \item \textbf{Phase Spectrum (cosine)} \par
+    Complementarily we define the cosine of the phase angle to enable a continuous and stable encoding of the phase information, without relying on complex values:
+    $$\text{Cosine Phase Spectrum} = \cos\left(\arctan\left(\frac{\Im}{\Re}\right)\right)$$
+    \item \textbf{Autocorrelation} \par
+    The autocorrelation is computed using the Inverse 2D DFT of the power spectrum, useful for highlighting repeated periodic patterns typical of generative convolutions:
+    $$\text{Autocorrelation} = DFT^{-1}((\Re^{2} + \Im^{2}) * (\Re^{2} - \Im^{2}))$$
+\end{enumerate}
+In \autoref{Fig:ExamplePreprocessing} a sample of what the different computed channels look like.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.45\textwidth]{assets/plot_example_grouped.pdf}
+    \caption{Example run of the Preprocessing pipeline over one row of the Dataset}
+    \label{Fig:ExamplePreprocessing}
+\end{figure}

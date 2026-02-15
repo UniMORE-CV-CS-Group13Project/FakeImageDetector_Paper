@@ -1,0 +1,213 @@
+\section{Experiments}
+\subsection{Experimental Setup}
+To guarantee robust results, we adopted a Stratified K-Fold Cross-Validation procedure with three folds for the training pipeline. \par
+Some of the most important training parameters used in our experiment are:
+\begin{itemize}
+    \item \textbf{Optimizer}: Adam;
+    \item \textbf{Loss Function}: Cross Entropy;
+    \item \textbf{Batch Size}: 32 images;
+    \item \textbf{Training Precision}: \texttt{float32} with Automatic Mixed Precision (AMP) to use \texttt{bfloat16} when possible;
+    \item \textbf{Epochs}: 100 Epochs implementing early stopping with a patience of 10 Epochs.
+\end{itemize}
+Additionally, a checkpointing mechanism has been employed to save both the best performing model (minimizing the validation loss) and the last trained model's weights for each Cross-Validation Fold.
+\subsection{Evaluation Strategy}
+In the testing phase an Ensemble Soft Voting strategy has been implemented.
+\subsubsection{Predictions}
+The predictions produced by the three folds are passed through a SoftMax operation and added together to then be averaged. The final class is assigned using ArgMax on the resulting averaged probabilities. This approach should reduce error variance and improve generalization. \par
+The averaged SoftMax outputs are used in order to reduce the possibility of the final prediction being influenced too much by just one of the models of the ensemble.
+\subsubsection{Test Loss}
+To compute the test loss, the average logits of the predictions are used in order to be consistent with previous notations. \par
+To guarantee the reliability of the evaluation, predictions and test loss were computed using the best checkpoint from each model instance.
+\subsection{Metrics}
+The final performance is evaluated using multiple metrics:
+\begin{itemize}
+    \item Accuracy;
+    \item Precision (per-class, with macro, micro and weighted averages);
+    \item Recall (per-class, with macro, micro and weighted averages);
+    \item F1-Score (per-class, with macro, micro and weighted averages);
+    \item Per-class Confusion Matrices.
+\end{itemize}
+These metrics were chosen to investigate both general and per-class performances. \par
+Given the fully balanced nature of our dataset, macro and weighted averages yield nearly identical results, as do micro averages with respect to the overall model accuracy.
+\subsection{Results}
+\subsubsection{Loss}
+Looking at \autoref{Fig:Loss-nodenoise} it is possible to observe both training and validation losses across the three folds. \par During training the loss values decrease smoothly from initial values around $1.26$ to values that vary between $0.6$ and $0.35$ depending on the fold. The stable downward trend suggests a stable optimization of the network during the training phase. \par
+Occasional spikes in the validation loss are observed, along with a typical overfitting pattern starting around the $25^{\text{th}}$ epoch. \par
+Soft Voting during the test run ensures better generalization, with respect to validation, as depicted by the lower loss value of the red line in the rightmost plot of \autoref{Fig:Loss-nodenoise}.
+\subsubsection{Accuracy}
+The classification performance shown in \autoref{Fig:Acc-nodenoise} represents the accuracy metric. \par
+It is possible to observe that during training the accuracy metrics increase rapidly from values near $40\%$ to $70\%$, then they improve steadily but more slowly up to $90\%$. \par
+Validation accuracy, exhibiting more variance between the results, shows a clear difficulty in the multiclass attribution task. \par
+Despite the validation metrics, test results do not drift a lot with respect to training performance, highlighting the effectiveness of the Ensemble Soft Voting technique.
+\subsubsection{Micro, Macro and Weighted Averaging}
+\begin{itemize}
+    \item \textbf{Micro} \par
+    Micro averaging metrics - as anticipated - exhibit a similar trend to the one of the overall accuracy due to the total balancing of the dataset.
+    \item \textbf{Macro} \par
+    Macro averaging exhibits some form of instability during the validation run, further reinforcing the already mentioned difficulties in multiclass classification.
+    \item \textbf{Weighted} \par
+    Weighted averaging metrics show exactly the same results as Macro averaging, on account of the total balance of the dataset used. 
+\end{itemize}
+These findings are shown in \autoref{Fig:WeightedResults-nodenoise}.
+\subsubsection{Per Class Scores}
+While synthetic classes are more difficult to discern from one another as shown in \autoref{Fig:PerClassResults-nodenoise}, real images are easily classified exhibiting substantially higher metrics (except for the class ``\texttt{Generator 0}'', which actually exhibits the highest performance metrics overall). \par
+These results suggest strong deepfake detection performance on real images; however, there is still room for improvement in the model’s ability to classify generator outputs. \par
+These considerations are perfectly reflected in the Confusion Matrices. \par
+\textbf{Class ``\texttt{Generator 0}'' - DeepFloyd/IF-II-L-v1.0} \par
+The Class ``\texttt{Generator 0}'' is easily identified by the model with a good precision. As seen in \autoref{App:Denoising} the generator has a strong digital fingerprint in the frequency domain, making it the only generator that benefits from a denoising process. This allows to better isolate meaningful patterns. \par
+\textbf{Class ``\texttt{Generator 1}'' - CompVis/stable-diffusion-v1-4} \par
+The Class ``\texttt{Generator 1}'' is a previous version of Stable Diffusion and it shares many characteristics with ``\texttt{Generator 2}''.  Due to this, accuracy and F1 score metrics are slightly inferior with respect to the ``\texttt{Real Image}'' class since the classifiers has difficulties distinguishing between these models and others based on stable diffusion. \par
+\textbf{Class ``\texttt{Generator 2}'' - stabilityai/stable-diffusion-2-1-base} \par
+The Class ``\texttt{Generator 2}'' exhibits spectral patterns which contain crucial, but fragile information at very high frequencies. This is partially explained by the slight loss in performance shown in \autoref{App:Denoising} with the denoising experiment. It is also possible to notice a difficulty in discerning between the Class ``\texttt{Generator 1}'' and this specific class, as explained in the previous analysis. \par
+\textbf{Class ``\texttt{Generator 3}'' - stabilityai/stable-diffusion-xl-base-1.0} \par
+Although the Class ``\texttt{Generator 3}'' belongs to the same family as ``\texttt{Generator 1}'' and ``\texttt{Generator 2}'', its performance is higher. This is likely because its underlying model differs slightly, making it easier for the classifier to distinguish between ``\texttt{Generator 3}'' and the others. \par
+\textbf{Class ``\texttt{Real Image}''} \par
+The Class ``\texttt{Real Image}'' can be considered the most robust class in terms of generalization, showing minimal fold-to-fold variability and strong ensemble stability, making the model suitable for fake image detection. \par
+\subsubsection{Plots}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/loss.pdf}
+        \caption{Loss performances over epochs}
+        \label{Fig:Loss-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/acc.pdf}
+        \caption{Accuracy performances over epochs}
+        \label{Fig:Acc-nodenoise}
+    \end{subfigure}
+    \caption{General metrics performances}
+    \label{Fig:GeneralResults-nodenoise}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/micro.pdf}
+        \caption{Micro performances over epochs}
+        \label{Fig:Micro-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/macro.pdf}
+        \caption{Macro performances over epochs}
+        \label{Fig:Macro-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/weighted.pdf}
+        \caption{Weighted performances over epochs}
+        \label{Fig:Weighted-nodenoise}
+    \end{subfigure}
+    \caption{Weighted general metrics performances}
+    \label{Fig:WeightedResults-nodenoise}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/class_0.pdf}
+        \caption{Class ``Generator 0'' performances over epochs}
+        \label{Fig:Class0-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/cm_0.pdf}
+        \caption{Class ``Generator 0'' confusion matrices over epochs}
+        \label{Fig:Class0cm-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/class_1.pdf}
+        \caption{Class ``Generator 1'' performances over epochs}
+        \label{Fig:Class1-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/cm_1.pdf}
+        \caption{Class ``Generator 1'' confusion matrices over epochs}
+        \label{Fig:Class1cm-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/class_2.pdf}
+        \caption{Class ``Generator 2'' performances over epochs}
+        \label{Fig:Class2-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/cm_2.pdf}
+        \caption{Class ``Generator 2'' confusion matrices over epochs}
+        \label{Fig:Class2cm-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/class_3.pdf}
+        \caption{Class ``Generator 3'' performances over epochs}
+        \label{Fig:Class3-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/cm_3.pdf}
+        \caption{Class ``Generator 3'' confusion matrices over epochs}
+        \label{Fig:Class3cm-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/class_4.pdf}
+        \caption{Class ``Real Image'' performances over epochs}
+        \label{Fig:Class4-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/cm_4.pdf}
+        \caption{Class ``Real Image'' confusion matrices over epochs}
+        \label{Fig:Class4cm-nodenoise}
+    \end{subfigure}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \ContinuedFloat
+    \begin{subfigure}[t]{.45\textwidth}
+        \includegraphics[width=\textwidth]{assets/plots/no_denoise/grouped/cm_test.pdf}
+        \caption{Confusion matrices in the Test phase}
+        \label{Fig:Testcm-nodenoise}
+    \end{subfigure}
+    \caption{Per-class metrics performances}
+    \label{Fig:PerClassResults-nodenoise}
+\end{figure}
